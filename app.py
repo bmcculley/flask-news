@@ -6,10 +6,7 @@ from flask import Flask, render_template, request, flash, \
 from urllib.parse import urlparse, urljoin
 from flask_login import LoginManager, UserMixin, current_user, \
                             login_required, login_user, logout_user
-from flask_wtf import FlaskForm
-from wtforms import Form, StringField, PasswordField, \
-                        SubmitField, validators
-from wtforms.widgets import TextArea
+from forms import LoginForm, RegistForm, PostForm
 from flask_sqlalchemy import SQLAlchemy
 import bcrypt
 import time
@@ -46,35 +43,6 @@ class User(UserMixin):
         
     def __repr__(self):
         return "%d/%s/%s" % (self.id, self.name, self.email)
-
-
-# the flask wtf login form setup and validation
-class LoginForm(Form):
-    username = StringField("Username", validators=[validators.DataRequired()])
-    password = PasswordField("Password", validators=[validators.DataRequired()])
-    submit = SubmitField("Login")
-
-
-class RegistForm(Form):
-    username = StringField("Username", validators=[validators.DataRequired()
-        ])
-    email = StringField("Email", validators=[
-        validators.DataRequired(), 
-        validators.Email()
-        ])
-    password = PasswordField("Password", validators=[validators.DataRequired(), 
-        validators.EqualTo("vpassword", message="Passwords don't match")
-        ])
-    vpassword = PasswordField("Verify Password", validators=[
-        validators.DataRequired()
-        ])
-    submit = SubmitField("Register")
-    
-class PostForm(Form):
-    title = StringField("Post Title", validators=[validators.DataRequired()])
-    content = StringField("Post Content", widget=TextArea())
-    url = StringField("Post URL")
-    submit = SubmitField("Submit")
 
 
 
