@@ -9,8 +9,17 @@ from flask_login import LoginManager, UserMixin, current_user, \
 from flask_wtf import FlaskForm
 from wtforms import Form, StringField, PasswordField, \
                         SubmitField, validators
+from wtforms.widgets import TextArea
 from flask_sqlalchemy import SQLAlchemy
 import bcrypt
+import time
+
+
+def current_time():
+    '''
+    return current time as epoch
+    '''
+    return int(time.time())
 
 # flask app setup
 app = Flask(__name__)
@@ -61,29 +70,58 @@ class RegistForm(Form):
         ])
     submit = SubmitField("Register")
     
-# create a post submit form
+class PostForm(Form):
+    title = StringField("Post Title", validators=[validators.DataRequired()])
+    content = StringField("Post Content", widget=TextArea())
+    url = StringField("Post URL")
+    submit = SubmitField("Submit")
 
 
 
 # the user table structure 
 class DBUser(db.Model):
+    __tablename__ = "user"
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(120), unique=False, nullable=False)
+    
+    # extra fields to create a profile page
+    # created
+    # points
+    # about
 
     def __repr__(self):
         return "<DBUser %r>" % self.username
         
 class DBPost(db.Model):
+    __tablename__ = "post"
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer)
     title = db.Column(db.String(120), unique=False, nullable=False)
-    url = db.Column(db.String(120), unique=False, nullable=False)
+    text = db.Column(db.String(1000), unique=False, nullable=True)
+    url = db.Column(db.String(120), unique=False, nullable=True)
     votes = db.Column(db.Integer)
     submit_date = db.Column(db.String(120), unique=False, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'),
+        nullable=False)
+        
+    user = db.relationship('DBUser',
+        backref=db.backref('post', lazy=True))
 
-
+class DBVote(db.Model):
+    __tablename__ = "votes"
+    id = db.Column(db.Integer, primary_key=True)
+    vote = db.Column(db.Integer)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'),
+        nullable=False)
+    user_votee = db.relationship('DBUser',
+        backref=db.backref('user_votee', lazy=True))
+        
+    post_id = db.Column(db.Integer, db.ForeignKey('post.id'),
+        nullable=False)
+    post_vote = db.relationship('DBPost',
+        backref=db.backref('post_vote', lazy=True))
+    
 # setup and populate the database
 def setup_db():
     db.create_all()
@@ -107,14 +145,25 @@ def is_safe_url(target):
 # home page (non protected)
 @app.route("/")
 def home():
+    # this query needs to be fixed to handle the ranking math
+    posts = DBPost.query.all()
     return render_template("home.html")
 
 
 # an example protected url
-@app.route("/secret")
+@app.route("/submit")
 @login_required
-def secret():
-    return render_template("secret.html")
+def submit():
+    form = PostForm(request.form)
+    if request.method == "POST"  and form.validate():
+        #post_user = DBUser(username=current_user.name)
+        post = DBPost(title=form.title.data, text=form.text.data, 
+                    url=form.url.data, submit_date=current_time(), 
+                    user_id=current_user.id)
+        db.session.add(post)
+        db.session.commit()
+    
+    return render_template("submit.html", form=form)
 
 
 # register here

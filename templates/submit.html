@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}
+Submit New Post
+{% endblock %}
+
+{% block page_title %}
+Submit New Post
+{% endblock %}
+
+{% block content %}
+<form action="{{ url_for('submit') }}" method="post"><br/>
+	{{ form.csrf_token }}
+	{{ form.title.label }}<br/>
+    {{ form.title(placeholder="Post Title") }}<br/>
+    {{ form.url.label }}<br/>
+    {{ form.url(placeholder="Post URL") }}<br/>
+    <p>or</p>
+    {{ form.content.label }}<br/>
+    {{ form.content(placeholder="Post Content") }} <br/>
+    {{ form.submit }}<br/>
+</form>
+{% endblock %}
+
+{% block footer %}
+Flask login example app by <a href="http://bmcculley.github.io">bmcculley</a>.
+{% endblock %}

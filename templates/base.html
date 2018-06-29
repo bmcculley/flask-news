@@ -15,8 +15,9 @@
             <div class="panel-title">
                 <p class="site-title">{% block page_title %}{% endblock %}</p>
                 <ul class="menu">
-                    {% if request.path == "/" %}
-                    <li><a href="/secret">The protected page</a></li>
+                    {% if request.path == "/" and current_user.is_authenticated %}
+                    <li><a href="/submit">Submit</a></li>
+                    <li><a href="/profile">Profile</a></li>
                     {% else %}
                     <li><a href="/">Home</a></li>
                     {% endif %}
@@ -27,7 +28,6 @@
                     <li><a href="/logout">Logout</a></li>
                     {% endif %}
                 </ul>
-                <div class="clearfix"></div>
             </div>
         </div>
         <div class="content">
